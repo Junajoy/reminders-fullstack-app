@@ -18,14 +18,30 @@ public class GlobalHandler {
         ex.getFieldErrors().stream()
                 .forEach(fieldError -> errors.put(fieldError.getField(), fieldError.getDefaultMessage()));
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ReminderResponse(HttpStatus.INTERNAL_SERVER_ERROR, errors));
+                .status(HttpStatus.BAD_REQUEST) // Typically this should be 400 Bad Request
+                .body(new ReminderResponse(HttpStatus.BAD_REQUEST, errors));
+    }
+
+    @ExceptionHandler(ReminderNotFoundException.class)
+    public ResponseEntity<ReminderResponse> handleReminderNotFoundException(ReminderNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND) // 404 Not Found for non-existing reminders
+                .body(new ReminderResponse(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ReminderResponse> handleException(Exception ex) {
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR) // 500 Internal Server Error for other exceptions
                 .body(new ReminderResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()));
+    }
+
+    /**
+     * Custom exception to be used when a reminder is not found by ID.
+     */
+    public static class ReminderNotFoundException extends RuntimeException {
+        public ReminderNotFoundException(String message) {
+            super(message);
+        }
     }
 }
